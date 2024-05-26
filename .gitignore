@@ -1,0 +1,5 @@
+environment/data
+.idea
+.vscode
+bin
+obj
