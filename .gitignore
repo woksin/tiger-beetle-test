@@ -3,3 +3,5 @@ environment/data
 .vscode
 bin
 obj
+environment/*.tigerbeetle
+infra

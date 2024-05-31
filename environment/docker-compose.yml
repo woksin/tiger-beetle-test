@@ -1,62 +1,42 @@
-##
-# Note: this example might only work with linux + using `network_mode:host` because of 2 reasons:
-#
-# 1. When specifying an internal docker network, other containers are only available using dns based routing:
-#    e.g. from tigerbeetle_0, the other replicas are available at `tigerbeetle_1:3002` and
-#    `tigerbeetle_2:3003` respectively.
-#
-# 2. Tigerbeetle performs some validation of the ip address provided in the `--addresses` parameter
-#    and won't let us specify a custom domain name.
-#
-# The workaround for now is to use `network_mode:host` in the containers instead of specifying our
-# own internal docker network
-##
+networks:
+  app-tier:
+    driver: bridge
 
 services:
-  tigerbeetle_0:
-    image: ghcr.io/tigerbeetle/tigerbeetle
-    command: "start --addresses=0.0.0.0:3001,0.0.0.0:3002,0.0.0.0:3003 /data/0_0.tigerbeetle"
-    network_mode: host
+#  postgresql:
+#    image: "postgres:16.2-alpine"
+#    ports:
+#      - "5433:5432"
+#    environment:
+#      - POSTGRES_DATABASE=postgres
+#      - POSTGRES_USER=postgres
+#      - PGUSER=postgres
+#      - POSTGRES_PASSWORD=postgres
+#    healthcheck:
+#      test: [ "CMD-SHELL", "pg_isready", "-q", "-U", "postgres", "-d", "postgres" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+  jaeger:
+    image: "jaegertracing/all-in-one:1.57"
+    ports:
+      - "16686:16686" # UI
+      - "4317:4317" # Ingestion port
+      - "4318:4318" # Ingestion port
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+  seq:
+    image: "datalust/seq:2024.3"
+    restart: unless-stopped
+    ports: 
+      - "5342:80" # UI
+      - "5341:5341" # Ingestion port
+    environment:
+      - ACCEPT_EULA=Y
     volumes:
-      - ./data:/data
-
-  tigerbeetle_1:
-    image: ghcr.io/tigerbeetle/tigerbeetle
-    command: "start --addresses=0.0.0.0:3001,0.0.0.0:3002,0.0.0.0:3003 /data/0_1.tigerbeetle"
-    network_mode: host
-    volumes:
-      - ./data:/data
-
-  tigerbeetle_2:
-    image: ghcr.io/tigerbeetle/tigerbeetle
-    command: "start --addresses=0.0.0.0:3001,0.0.0.0:3002,0.0.0.0:3003 /data/0_2.tigerbeetle"
-    network_mode: host
-    volumes:
-      - ./data:/data
-
-  tigerbeetle_3:
-    image: ghcr.io/tigerbeetle/tigerbeetle
-    command: "start --addresses=0.0.0.0:3001,0.0.0.0:3002,0.0.0.0:3003 /data/0_3.tigerbeetle"
-    network_mode: host
-    volumes:
-      - ./data:/data
-    profiles:
-      - prod
-
-  tigerbeetle_4:
-    image: ghcr.io/tigerbeetle/tigerbeetle
-    command: "start --addresses=0.0.0.0:3001,0.0.0.0:3002,0.0.0.0:3003 /data/0_4.tigerbeetle"
-    network_mode: host
-    volumes:
-      - ./data:/data
-    profiles:
-      - prod
-
-  tigerbeetle_5:
-    image: ghcr.io/tigerbeetle/tigerbeetle
-    command: "start --addresses=0.0.0.0:3001,0.0.0.0:3002,0.0.0.0:3003 /data/0_5.tigerbeetle"
-    network_mode: host
-    volumes:
-      - ./data:/data
-    profiles:
-      - prod
+      - ./data/seq:/data

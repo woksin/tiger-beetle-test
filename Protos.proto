@@ -1,0 +1,14 @@
+syntax = "proto3";
+package HelloHelloWorld;
+option csharp_namespace = "TigerBeetleTest.Messages";
+
+message AddAccountsRequest {
+  uint32 Number=1;
+}
+message AddAccountsResponse {
+  string Message=1;
+}
+
+service AccountsGrain {
+  rpc AddAccounts(AddAccountsRequest) returns (AddAccountsResponse) {}
+}
